@@ -1,3 +1,16 @@
-# Manually generated .gitignore file
+# History files
+.Rhistory
 
-# no content so far...
+# Environments
+.RData
+
+# RStudio project file
+.Rproj.user
+
+# Example code in package build process
+*-Ex.R
+
+# Exclude data
+measurements
+measurements_CellASIC
+plots

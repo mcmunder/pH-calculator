@@ -8,7 +8,7 @@
 # Set working directory -------------------------------------------------------
 
 rm(list=ls()) # clean up
-directory = "/Users/munder/Desktop/pH/MN/"
+directory = "~/Git/pH-calculator/"
 setwd(directory)     
 
 
@@ -24,9 +24,9 @@ library("tcltk")
 
 #options(digits=16) # change numer of digits globally
 
-sampleName = "log"
+sampleName = "int_log"
 #dirOutput = "/Users/munder/PhD/pH-measurements/"
-#folderOutput = "2014_04_17_pHluorin_DNP/" # give name of output folder here
+folderOutput = "plots/" # give name of output folder here
 
 
 # Define functions ------------------------------------------------------------
@@ -95,7 +95,8 @@ p = p + geom_line(aes(y=stats_ratios$mean), size=.5, colour="red")
 
 p
 
-ggsave(p, file=paste(sampleName, ".pdf", sep=""), width=7, height=5)
+dir.create(paste(directory, folderOutput))
+ggsave(p, file=paste(folderOutput, sampleName, ".pdf", sep=""), width=7, height=5)
 
 
 # print("---------------------------------------------------------")

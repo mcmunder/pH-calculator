@@ -24,12 +24,12 @@ mean_ratio_70 = mean_ratios[[5]]
 norm_mean_ratios = mean_ratios/mean_ratio_70
 
 # sd and sem of normalized ratios
-sd_norm <- sapply(ratios,sd)
-sem_norm <- sd_norm/sqrt(length(data_df))
+sd_ratio<- sapply(ratios,sd)
+sem_ratio <- sd_ratio/sqrt(length(data_df))
 
 # create final dataframe
 pH = c(5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0)
-dataframe = data.frame(cbind(pH, norm_mean_ratios, sd_norm, sem_norm))
+dataframe = data.frame(cbind(pH, mean_ratios, sd_ratio, sem_ratio))
 colnames(dataframe) = c('pH', 'Mean', 'SD','SEM')
 
 # curve fitting 
@@ -72,5 +72,5 @@ print(p)
 
 setwd(directory)
 
-rm(list=setdiff(ls(), c("p", "calc_pH", "mean_ratio_70", "best_fit", "stats", "sampleName")))
+rm(list=setdiff(ls(), c("directory", "folderOutput", "calc_pH", "stats", "best_fit", "name", "timeRes")))
 
