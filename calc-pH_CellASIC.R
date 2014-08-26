@@ -15,16 +15,16 @@ setwd(directory)
 
 library("ggplot2")
 library("plyr")
-library("tcltk")
+#library("tcltk")
 
 
 # Set parameters --------------------------------------------------------------
 # Please adjust all of the following parameters
 
-name = "SD-glu"
+name = "UnitB"
 #dirOutput = "/Users/munder/PhD/pH-measurements/"
 folderOutput = "plots/" # give name of output folder here
-timeRes = 10 # in minutes
+timeRes = 5 # in minutes
 
 # Define functions ------------------------------------------------------------
 calc_pH = function(emission_ratio, model){
@@ -93,7 +93,7 @@ p = ggplot(df_final, aes(x=time, y=mean))
 p = p + geom_line(size=1, colour="red")
 p = p + geom_point(size=3)
 p = p + geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd), size=1, width=4)
-p = p + scale_x_continuous(limits=c(0, 420), breaks=seq(0, 420, 60))
+#p = p + scale_x_continuous(limits=c(0, 420), breaks=seq(0, 420, 60))
 #p = p + scale_y_continuous(breaks=seq(6.6, 7.8, 0.1))
 p = p + labs(title=name, x="time [min]", y="pH")
 p = p + theme_bw(base_size=24)

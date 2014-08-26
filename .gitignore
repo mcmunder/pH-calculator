@@ -11,6 +11,6 @@
 *-Ex.R
 
 # Exclude data
-measurements
-measurements_CellASIC
-plots
+input
+input_CellASIC
+output

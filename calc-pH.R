@@ -24,7 +24,7 @@ library("tcltk")
 
 #options(digits=16) # change numer of digits globally
 
-sampleName = "int_log"
+name = "aged"
 #dirOutput = "/Users/munder/PhD/pH-measurements/"
 folderOutput = "plots/" # give name of output folder here
 
@@ -70,15 +70,15 @@ rm(list_ff, list_df)
 ratios = data_df/data_ff
 
 # normalize ratios to pH 7.0 from calibration experiment
-norm_ratios = ratios/mean_ratio_70
+#norm_ratios = ratios/mean_ratio_70
 
 # stats ratios
-stats_ratios = stats(norm_ratios)
-
+#stats_ratios = stats(norm_ratios)
+stats_ratios = stats(ratios)
 
 # calculate pH ----------------------------------------------------------------
 
-pH = calc_pH(norm_ratios, best_fit)
+pH = calc_pH(ratios, best_fit)
 
 # stats pH
 stats_pH = stats(pH)
@@ -95,10 +95,6 @@ p = p + geom_line(aes(y=stats_ratios$mean), size=.5, colour="red")
 
 p
 
-dir.create(paste(directory, folderOutput))
-ggsave(p, file=paste(folderOutput, sampleName, ".pdf", sep=""), width=7, height=5)
+dir.create(paste(directory, folderOutput, sep=""))
+ggsave(p, file=paste(folderOutput, name, ".pdf", sep=""), width=7, height=5)
 
-
-# print("---------------------------------------------------------")
-# print(paste("---------------------------------------------------------",
-#             "The calculated pH is:", stats_pH$mean, sep=" "))

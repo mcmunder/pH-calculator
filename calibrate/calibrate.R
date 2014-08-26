@@ -72,5 +72,5 @@ print(p)
 
 setwd(directory)
 
-rm(list=setdiff(ls(), c("directory", "folderOutput", "calc_pH", "stats", "best_fit", "name", "timeRes")))
+rm(list=setdiff(ls(), c("directory", "folderOutput", "calc_pH", "stats", "best_fit", "name", "timeRes", "mean_ratio_70", "p")))
 
