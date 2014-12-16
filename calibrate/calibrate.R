@@ -5,37 +5,50 @@
 
 setwd(paste(directory, "calibrate", sep=""))
 
-temp <- list.files(pattern="df")
-list_df <- sapply(temp, read.delim)
-list_df <- t(list_df )
-data_df <- data.frame(list_df[,"Mean1"])
+temp <- list.files(pattern="Results")
+list <- sapply(temp, read.delim)
+list <- t(list)
+mean = sapply(list[,"Mean"], mean)
+raw_data = ldply(mean)
 
-temp <- list.files(pattern="ff")
-list_ff <- sapply(temp, read.delim)
-list_ff <- t(list_ff )
-data_ff <- data.frame(list_ff[,"Mean1"])
+channel = c(rep("df", 6), rep("ff", 6))
+pH = c(rep(5, 12), rep(5.5, 12), rep(6, 12), rep(6.5, 12), rep(7, 12), rep(7.5, 12), rep(8, 12))
+
+data = as.data.frame(cbind(channel, pH, raw_data$V1))
+colnames(data) = c("channel", "pH", "counts")
+
+write.reload("data")
 
 # ratios
-ratios <- data_df/data_ff
-mean_ratios <- sapply(ratios,mean)
 
-# normalize ratios to pH7
-mean_ratio_70 = mean_ratios[[5]]
-norm_mean_ratios = mean_ratios/mean_ratio_70
+#new
+#ratios = (as.numeric(as.character((subset(data, channel=="df"))$counts))) / (as.numeric(as.character((subset(data, channel=="ff"))$counts)))
+
+ratios =  (as.numeric(as.character((subset(data, channel=="ff"))$counts))) / (as.numeric(as.character((subset(data, channel=="df"))$counts)))
+
+
+df_ratios = data.frame(cbind((as.numeric(as.character((subset(data, channel=="df"))$pH))), ratios))
+colnames(df_ratios) = c("pH", "ratio")
+
+dataframe = ddply(df_ratios, .(pH), summarize, mean= mean(ratio), sd = sd(ratio) )
+
+# # normalize ratios to pH7
+# mean_ratio_70 = mean_ratios[[5]]
+# norm_mean_ratios = mean_ratios/mean_ratio_70
 
 # sd and sem of normalized ratios
-sd_ratio<- sapply(ratios,sd)
-sem_ratio <- sd_ratio/sqrt(length(data_df))
-
-# create final dataframe
-pH = c(5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0)
-dataframe = data.frame(cbind(pH, mean_ratios, sd_ratio, sem_ratio))
-colnames(dataframe) = c('pH', 'Mean', 'SD','SEM')
+# sd_ratio<- sapply(ratios,sd)
+# sem_ratio <- sd_ratio/sqrt(length(data_df))
+# 
+# # create final dataframe
+# pH = c(5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0)
+# dataframe = data.frame(cbind(pH, mean_ratios, sd_ratio, sem_ratio))
+# colnames(dataframe) = c('pH', 'Mean', 'SD','SEM')
 
 # curve fitting 
 
 # what's the "best" fit?
-x = dataframe$Mean
+x = dataframe$mean
 y = dataframe$pH
 
 plot(x,y,pch=19)
@@ -60,17 +73,16 @@ best_fit = lm(y~poly(x,4,raw=TRUE))
 
 
 # plot
-p = ggplot(dataframe, aes(x=pH, y=Mean))
-p = p + geom_point(size=4)
-p = p + geom_errorbar(aes(ymin=Mean-SEM, ymax=Mean+SEM), width=.1, size=1)
+p = ggplot(dataframe, aes(x=pH, y=mean))
+p = p + geom_smooth(method="lm", formula = y~poly(x,4), colour='blue', size=1.5) # "best" fit
+p = p + geom_point(size=5)
+p = p + geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd), width=.2, size=2)
 p = p + scale_x_continuous(breaks=seq(5, 8, .5))
 #p = p + scale_y_continuous(limits=c(0.5, 1.3), breaks=seq(0.5, 1.3, .1))
-p = p + geom_smooth(method="lm", formula = y~poly(x,4), colour='blue') # "best" fit
-p = p + labs(x="pH", y="normalized emission ratio")
-p = p + theme_bw(base_size=24)
+p = p + labs(x="pH", y="Emission ratio")
+p = p + theme_bw(base_size=28)
 print(p) 
 
 setwd(directory)
 
-rm(list=setdiff(ls(), c("directory", "folderOutput", "calc_pH", "stats", "best_fit", "name", "timeRes", "mean_ratio_70", "p")))
-
+rm(list=setdiff(ls(), c("directory", "field_of_views", "dir_output", "folder_output", "calc.pH", "stats", "best_fit", "condition", "timeRes", "mean_ratio_70", "p", "write.reload", "save.plot", "rm.bg")))

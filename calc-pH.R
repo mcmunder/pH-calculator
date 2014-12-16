@@ -24,9 +24,9 @@ library("tcltk")
 
 #options(digits=16) # change numer of digits globally
 
-name = "aged"
+name = "pHluorin_YPD"
 #dirOutput = "/Users/munder/PhD/pH-measurements/"
-folderOutput = "plots/" # give name of output folder here
+folderOutput = "output/" # give name of output folder here
 
 
 # Define functions ------------------------------------------------------------
