@@ -21,10 +21,11 @@ library("plyr")
 # Set parameters --------------------------------------------------------------
 # Please adjust all of the following parameters
 
-condition = "UnitB"
+unit = "UnitA"
 dir_output = "/Users/munder/Git/pH-calculator/"
 folder_output = "output/" # give name of output folder here
-timeRes = 10 # in minutes
+time_res = 10 # in minutes
+timepoints = 31
 field_of_views = 6
 
 
@@ -82,32 +83,65 @@ save.plot = function(plot, file_name, width, height){
 # Calibrate
 source(paste(directory, "calibrate/calibrate.R", sep=""))
 
-# Read files in a for loop
-setwd(paste(directory, "input_CELLASIC", sep=""))
+# Read files
+setwd(paste(directory, "input_CellASIC", sep=""))
 
-# FITC/FITC
-df_ff = NULL
-for(i in 1:field_of_views){
-  #FITC/FITC
-  df_ff_temp = read.delim(paste("Results_", condition, "_0", i, "_ff", ".txt", sep=""))
-  time = df_ff_temp$X*timeRes-10
-  replicate = rep(i, nrow(df_ff_temp))
-  channel = rep("ff", nrow(df_ff_temp))
-  df_ff_temp = cbind(df_ff_temp, time, replicate, channel)
-  df_ff = rbind(df_ff, df_ff_temp)
-} 
+temp <- list.files(pattern="Results")
+list <- sapply(temp, read.delim)
+list <- t(list)
+mean = sapply(list[,"Mean"], mean) 
+raw_data = ldply(mean)
 
-# DAPI/FITC
-df_df = NULL
+
+# tags
+
+# unit
+
+# field of view
+fov = NULL
 for(i in 1:field_of_views){
-  #FITC/FITC
-  df_df_temp = read.delim(paste("Results_", condition, "_0", i, "_df", ".txt", sep=""))
-  time = df_ff_temp$X*timeRes-10
-  replicate = rep(i, nrow(df_df_temp))
-  channel = rep("df", nrow(df_df_temp))
-  df_df_temp = cbind(df_df_temp, time, replicate, channel)
-  df_df = rbind(df_df, df_df_temp)
-} 
+  fov_temp = rep(i, timepoints*2)
+  fov = c(fov, fov_temp)
+}
+
+#channel
+channel = c(rep("df", timepoints), rep("ff", timepoints))
+
+# timestamp
+time = (seq(0, timepoints-1, 1)) * time_res
+
+dataframe = cbind(unit, channel, time, fov, raw_data)
+colnames(dataframe) = c("unit", "channel", "time", "fov", "id", "counts")
+
+ratios = (subset(dataframe, channel=="df"))$counts / (subset(dataframe, channel=="ff"))$counts
+
+
+# # Read files in a for loop
+# setwd(paste(directory, "input_CELLASIC", sep=""))
+# 
+# # FITC/FITC
+# df_ff = NULL
+# for(i in 1:field_of_views){
+#   #FITC/FITC
+#   df_ff_temp = read.delim(paste("Results_", condition, "_0", i, "_ff", ".txt", sep=""))
+#   time = df_ff_temp$X*timeRes-10
+#   replicate = rep(i, nrow(df_ff_temp))
+#   channel = rep("ff", nrow(df_ff_temp))
+#   df_ff_temp = cbind(df_ff_temp, time, replicate, channel)
+#   df_ff = rbind(df_ff, df_ff_temp)
+# } 
+# 
+# # DAPI/FITC
+# df_df = NULL
+# for(i in 1:field_of_views){
+#   #FITC/FITC
+#   df_df_temp = read.delim(paste("Results_", condition, "_0", i, "_df", ".txt", sep=""))
+#   time = df_ff_temp$X*timeRes-10
+#   replicate = rep(i, nrow(df_df_temp))
+#   channel = rep("df", nrow(df_df_temp))
+#   df_df_temp = cbind(df_df_temp, time, replicate, channel)
+#   df_df = rbind(df_df, df_df_temp)
+# } 
 
 # Correct for autofluorescence background (this assumes that intracellular pH is at pH 7.4 
 # in log phase cells and uses this asumption to substract background from both channels
@@ -124,23 +158,25 @@ for(i in 1:field_of_views){
 
 
 # Ratios
-df_ratios = data.frame(cbind(df_ff$time, df_ff$replicate, df_df$Mean1/df_ff$Mean1))
-colnames(df_ratios) = c("time", "replicate", "ratio")
+# df_ratios = cbind(df_ff$time, df_ff$replicate, df_df$Mean1/df_ff$Mean1))
+# colnames(df_ratios) = c("time", "replicate", "ratio")
 
 # Normalize
 #norm_ratios = df_ratios$ratio/mean_ratio_70
 
 # Calc pH
-pH = calc.pH(df_ratios$ratio, best_fit)
+pH = calc.pH(ratios, best_fit)
 
 # Final dataframe
-df_pH = cbind(df_ratios, pH, rep(condition, length(pH)))
-colnames(df_pH) = c("time", "replicate", "ratio", "pH", "condition")
+df_pH = as.data.frame(cbind(unit, time, ratios, pH))
+df_pH$pH = as.numeric(as.character(df_pH$pH))
+df_pH$time = as.numeric(as.character(df_pH$time))
+
 
 # Get stats over time
-df_final = ddply(df_pH, .(time, condition), stats)
-assign(paste("df_", condition, sep=""), df_final)
-write.reload(paste("df_", condition, sep=""))
+df_final = ddply(df_pH, .(time, unit), stats)
+assign(paste("df_", unit, sep=""), df_final)
+write.reload(paste("df_", unit, sep=""))
 
 # Plot
 

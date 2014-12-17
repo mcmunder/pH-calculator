@@ -85,4 +85,4 @@ print(p)
 
 setwd(directory)
 
-rm(list=setdiff(ls(), c("directory", "field_of_views", "dir_output", "folder_output", "calc.pH", "stats", "best_fit", "condition", "timeRes", "mean_ratio_70", "p", "write.reload", "save.plot", "rm.bg")))
+#rm(list=setdiff(ls(), c("directory", "field_of_views", "unit", "timepoints", "dir_output", "folder_output", "calc.pH", "stats", "best_fit", "condition", "time_res", "mean_ratio_70", "p", "write.reload", "save.plot", "rm.bg")))
