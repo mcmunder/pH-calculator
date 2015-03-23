@@ -24,7 +24,7 @@ write.reload("data")
 #new
 #ratios = (as.numeric(as.character((subset(data, channel=="df"))$counts))) / (as.numeric(as.character((subset(data, channel=="ff"))$counts)))
 
-ratios =  (as.numeric(as.character((subset(data, channel=="ff"))$counts))) / (as.numeric(as.character((subset(data, channel=="df"))$counts)))
+ratios =  (as.numeric(as.character((subset(data, channel=="df"))$counts))) / (as.numeric(as.character((subset(data, channel=="ff"))$counts)))
 
 
 df_ratios = data.frame(cbind((as.numeric(as.character((subset(data, channel=="df"))$pH))), ratios))

@@ -21,12 +21,16 @@ library("plyr")
 # Set parameters --------------------------------------------------------------
 # Please adjust all of the following parameters
 
-unit = "UnitA"
+unit = "B"
 dir_output = "/Users/munder/Git/pH-calculator/"
 folder_output = "output/" # give name of output folder here
 time_res = 10 # in minutes
-timepoints = 31
+timepoints = 67
 field_of_views = 6
+
+# Colour 
+cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 
 
 # Define functions ------------------------------------------------------------
@@ -81,21 +85,27 @@ save.plot = function(plot, file_name, width, height){
 }
 
 # Calibrate
-source(paste(directory, "calibrate/calibrate.R", sep=""))
+source(paste(directory, "/calibrate/calibrate.R", sep=""))  #/old
+
+# loop for plotting differnt measurements together
+
+# units = c("A", "B", "C", "D")
+# 
+# for(i in 1 :4){
+# 
+#   unit = units[i]
+
 
 # Read files
 setwd(paste(directory, "input_CellASIC", sep=""))
 
-temp <- list.files(pattern="Results")
+temp <- list.files(pattern=unit)
 list <- sapply(temp, read.delim)
 list <- t(list)
 mean = sapply(list[,"Mean"], mean) 
 raw_data = ldply(mean)
 
-
 # tags
-
-# unit
 
 # field of view
 fov = NULL
@@ -113,56 +123,11 @@ time = (seq(0, timepoints-1, 1)) * time_res
 dataframe = cbind(unit, channel, time, fov, raw_data)
 colnames(dataframe) = c("unit", "channel", "time", "fov", "id", "counts")
 
+# Test more substraction
+#bg = 10
+#dataframe$counts = dataframe$counts - bg
+
 ratios = (subset(dataframe, channel=="df"))$counts / (subset(dataframe, channel=="ff"))$counts
-
-
-# # Read files in a for loop
-# setwd(paste(directory, "input_CELLASIC", sep=""))
-# 
-# # FITC/FITC
-# df_ff = NULL
-# for(i in 1:field_of_views){
-#   #FITC/FITC
-#   df_ff_temp = read.delim(paste("Results_", condition, "_0", i, "_ff", ".txt", sep=""))
-#   time = df_ff_temp$X*timeRes-10
-#   replicate = rep(i, nrow(df_ff_temp))
-#   channel = rep("ff", nrow(df_ff_temp))
-#   df_ff_temp = cbind(df_ff_temp, time, replicate, channel)
-#   df_ff = rbind(df_ff, df_ff_temp)
-# } 
-# 
-# # DAPI/FITC
-# df_df = NULL
-# for(i in 1:field_of_views){
-#   #FITC/FITC
-#   df_df_temp = read.delim(paste("Results_", condition, "_0", i, "_df", ".txt", sep=""))
-#   time = df_ff_temp$X*timeRes-10
-#   replicate = rep(i, nrow(df_df_temp))
-#   channel = rep("df", nrow(df_df_temp))
-#   df_df_temp = cbind(df_df_temp, time, replicate, channel)
-#   df_df = rbind(df_df, df_df_temp)
-# } 
-
-# Correct for autofluorescence background (this assumes that intracellular pH is at pH 7.4 
-# in log phase cells and uses this asumption to substract background from both channels
-
-# df_bg = ((ddply(df_df, .(time), summarize, mean=mean(Mean1)))$mean)[1:6]
-# ff_bg = ((ddply(df_ff, .(time), summarize, mean=mean(Mean1)))$mean)[1:6]
-# 
-# bg = rm.bg(df_bg, ff_bg)
-
-# bg = 50
-#   
-# df_df$Mean1 = df_df$Mean1 - bg
-# df_ff$Mean1 = df_ff$Mean1 - bg
-
-
-# Ratios
-# df_ratios = cbind(df_ff$time, df_ff$replicate, df_df$Mean1/df_ff$Mean1))
-# colnames(df_ratios) = c("time", "replicate", "ratio")
-
-# Normalize
-#norm_ratios = df_ratios$ratio/mean_ratio_70
 
 # Calc pH
 pH = calc.pH(ratios, best_fit)
@@ -175,52 +140,68 @@ df_pH$time = as.numeric(as.character(df_pH$time))
 
 # Get stats over time
 df_final = ddply(df_pH, .(time, unit), stats)
-assign(paste("df_", unit, sep=""), df_final)
-write.reload(paste("df_", unit, sep=""))
+#assign("df_2DG_pH55", subset(df_final, time<=200))
+
+#df_sorb_6mM$time = df_sorb_6mM$time - 300
+
+#write.reload("df_2DG_pH70")
+
+# 
+#test = subset(df_final, time<=200)
+test = subset(df_final, time>=300 & time<=500)
+# sorb_6mM$time = sorb_6mM$time - 300
 
 # Plot
-
-
-p = ggplot(df_final, aes(x=time, y=mean))
+p = ggplot(test, aes(x=time, y=mean))
 p = p + geom_line(size=1.8, colour="blue")
 p = p + geom_point(size=4)
 p = p + geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd), size=1.2, width=5)
-#p = p + scale_x_continuous(limits=c(-5, 300), breaks=seq(0, 300, 60))
+#p = p + scale_x_continuous(limits=c(-5, 200), breaks=seq(0, 200, 60))
 #p = p + scale_y_continuous(breaks=seq(6.6, 7.8, 0.1))
 p = p + labs(x="time [min]", y="pH")
 p = p + theme_bw(base_size=28)
 p 
 
 # Save plot
-setwd(paste(directory, "output", sep=""))
-ggsave(p, file=paste(condition, ".pdf", sep=""), width=9, height=6)
+# setwd(paste(directory, "output", sep=""))
+# ggsave(p, file=paste(sorb_6mM, ".pdf", sep=""), width=9, height=6)
 
-# # Plot multiple pH together
-# 
+#Plot multiple pH together
+
 # setwd(directory)
+# # # # 
+#df_2DG_pH55 = read.delim("output/df_2DG_pH55.txt")
+#df_2DG_pH70 = read.delim("output/df_2DG_pH70.txt")
+# df_sorb1mM$unit = "C"
+# df_sorb2mM = read.delim("output/sorb_2mM.txt")
+# df_sorb4mM = read.delim("output/df_sorb4mM.txt")
+# df_sorb4mM$unit = "B"
+# df_sorb6mM = read.delim("output/df_sorb6mM.txt")
+# df_sorb6mM$unit = "A"
 # 
-# df_UnitA = read.delim("output/df_UnitA.txt")
-# df_UnitB = read.delim("output/df_UnitB.txt")
-# df_UnitC = read.delim("output/df_UnitC.txt")
-# df_UnitD = read.delim("output/df_UnitD.txt")
-# 
-# df = rbind(df_UnitC, df_UnitD)
-# 
-# p = ggplot(df, aes(x=time, y=mean, colour=condition))
+# # 
+# # 
+# # df_A = read.delim("output/df_A.txt")
+# # df_B = read.delim("output/df_B.txt")
+# # df_C = read.delim("output/df_C.txt")
+# # df_D = read.delim("output/df_D.txt")
+# # 
+# # 
+# df = rbind(df_sorb1mM, df_sorb4mM, df_sorb6mM)
+# #write.reload("df")
+# # df = rbind(df_A, df_B, df_D)
+# # #df$mean = df$mean - 0.2
+# # 
+# # 
+# p = ggplot(df, aes(x=time, y=mean, colour=unit))
 # p = p + geom_line(size=2)
 # p = p + geom_point(size=2)
 # p = p + geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd), size=1, width=5)
-# p = p + scale_x_continuous(limits=c(-5, 300), breaks=seq(0, 300, 60))
-# #p = p + scale_y_continuous(breaks=seq(6.6, 7.8, 0.1))
+# p = p + scale_colour_manual(values=cbPalette)
+# p = p + scale_x_continuous(limits=c(-5, 200), breaks=seq(0, 300, 60))
+# p = p + scale_y_continuous(breaks=seq(5, 8, 0.5))
 # p = p + labs(x="time [min]", y="pH")
 # p = p + theme_bw(base_size=28)
 # p 
-# 
-# # save.plot(p, "pH_2DG_AntiA.pdf", 9, 6)
-
-
-
-
-
-
-
+# # 
+# #save.plot(p, "pH_sorbic_acid_all.pdf", 7, 6)
