@@ -3,40 +3,45 @@
 # exactly as descibed in Brett et al. 2005, (DOI: 10.1091/mbc.E04-11-0999),
 # Figure 2B.
 
-setwd(paste(directory, "calibrate", sep=""))
+setwd(input_dir_calibration)
 
-temp <- list.files(pattern="df")
-list_df <- sapply(temp, read.delim)
-list_df <- t(list_df )
-data_df <- data.frame(list_df[,"Mean1"])
+# 8 pH conditions (ids) and 3 channels: tritc/tritc, fitc/fitc, dapi/fitc
+pH_values = c(4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0)
+channels = c('tt', 'ff', 'df')
 
-temp <- list.files(pattern="ff")
-list_ff <- sapply(temp, read.delim)
-list_ff <- t(list_ff )
-data_ff <- data.frame(list_ff[,"Mean1"])
 
-# ratios
-ratios <- data_df/data_ff
-mean_ratios <- sapply(ratios,mean)
+# List of files in input directory
+list_files = list.files(pattern = '.txt')
+list_dataframes = llply(list_files, read.delim)
 
-# normalize ratios to pH7
-mean_ratio_70 = mean_ratios[[5]]
-norm_mean_ratios = mean_ratios/mean_ratio_70
+list_norm_ratios = NULL
+for(i in seq(3, length(list_dataframes), 3)){
+  # Area should always normalize to 1! Good control! Just skip the [3] indexing
+  norm_ratio = (list_dataframes[[i-2]][3] / list_dataframes[[i]][3]) / (list_dataframes[[i-1]][3] / list_dataframes[[i]][3])
+  list_norm_ratios = append(list_norm_ratios, norm_ratio)
+  rm(i, norm_ratio)
+}
 
-# sd and sem of normalized ratios
-sd_ratio<- sapply(ratios,sd)
-sem_ratio <- sd_ratio/sqrt(length(data_df))
-
-# create final dataframe
-pH = c(5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0)
-dataframe = data.frame(cbind(pH, mean_ratios, sd_ratio, sem_ratio))
-colnames(dataframe) = c('pH', 'Mean', 'SD','SEM')
+df_stats = NULL
+for(j in seq(6, length(list_norm_ratios), 6)){
+  pH = pH_values[j/6]
+  mean_ratio = mean(unlist(list_norm_ratios[(j-5):j]))
+  sd_ratio = sd(unlist(list_norm_ratios[(j-5):j]))
+  sem_ratio = sd_ratio / sqrt(length(unlist(list_norm_ratios[(j-5):j])))
+  df_stats_temp = data.frame(pH, mean_ratio, sd_ratio, sem_ratio)
+  df_stats = rbind(df_stats, df_stats_temp)
+  rm(j, mean_ratio, sd_ratio, sem_ratio, pH)
+}
 
 # curve fitting 
+p = ggplot(df_stats, aes(x=pH, y=mean_ratio))
+p = p + geom_point()
+p
+
 
 # what's the "best" fit?
-x = dataframe$Mean
-y = dataframe$pH
+x = df_stats$pH
+y = df_stats$mean_ratio
 
 plot(x,y,pch=19)
 
@@ -60,7 +65,7 @@ best_fit = lm(y~poly(x,4,raw=TRUE))
 
 
 # plot
-p = ggplot(dataframe, aes(x=pH, y=Mean))
+p = ggplot(dataframe, aes(x=pH, y=mean_ratio))
 p = p + geom_point(size=4)
 p = p + geom_errorbar(aes(ymin=Mean-SEM, ymax=Mean+SEM), width=.1, size=1)
 p = p + scale_x_continuous(breaks=seq(5, 8, .5))
@@ -69,8 +74,3 @@ p = p + geom_smooth(method="lm", formula = y~poly(x,4), colour='blue') # "best" 
 p = p + labs(x="pH", y="normalized emission ratio")
 p = p + theme_bw(base_size=24)
 print(p) 
-
-setwd(directory)
-
-rm(list=setdiff(ls(), c("directory", "folderOutput", "calc_pH", "stats", "best_fit", "name", "timeRes", "mean_ratio_70", "p")))
-

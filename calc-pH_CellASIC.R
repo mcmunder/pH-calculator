@@ -5,26 +5,33 @@
 ####
 
 
-# Set working directory -------------------------------------------------------
-
+# Clean up --------------------------------------------------------------------
 rm(list=ls()) # clean up
-directory = "~/Git/pH-calculator/"
-setwd(directory)     
+  
 
 # Load required packages ------------------------------------------------------
 
 library("ggplot2")
 library("plyr")
-#library("tcltk")
+library("tcltk2")
+library("gdata")
+
+
 
 
 # Set parameters --------------------------------------------------------------
 # Please adjust all of the following parameters
 
-name = "UnitB"
-#dirOutput = "/Users/munder/PhD/pH-measurements/"
-folderOutput = "plots/" # give name of output folder here
-timeRes = 5 # in minutes
+name = "pH56" # Must match the name of result files
+timeRes = 10 # in minutes
+
+
+# Set input and output directory ------------------------------------------
+
+input_dir_measurements = tk_choose.dir(caption=("Select input directory containing measurement results."))
+input_dir_calibration = tk_choose.dir(caption=("Select input directory containing calibration data."))
+output_dir = tk_choose.dir(caption=("Select output directory. Dataframes and plots will be saved here."))
+
 
 # Define functions ------------------------------------------------------------
 calc_pH = function(emission_ratio, model){
@@ -42,17 +49,17 @@ stats = function(df){
 }
 
 # Calibrate
-source(paste(directory, "calibrate/calibrate.R", sep=""))
+source(paste(input_dir_calibration, "/calibrate.R", sep=""))
 
 # Read files in a for loop
-setwd(paste(directory, "measurements_CELLASIC", sep=""))
+setwd(input_dir_measurements)
 
 # FITC/FITC
 df_ff = NULL
 for(i in 1:6){
   #FITC/FITC
   df_ff_temp = read.delim(paste("Results_", name, "_0", i, "_ff", ".txt", sep=""))
-  time = df_ff_temp$X*timeRes-10
+  time = df_ff_temp$X * timeRes - 10
   replicate = rep(i, nrow(df_ff_temp))
   channel = rep("ff", nrow(df_ff_temp))
   df_ff_temp = cbind(df_ff_temp, time, replicate, channel)
@@ -64,7 +71,7 @@ df_df = NULL
 for(i in 1:6){
   #FITC/FITC
   df_df_temp = read.delim(paste("Results_", name, "_0", i, "_df", ".txt", sep=""))
-  time = df_ff_temp$X*timeRes-10
+  time = df_ff_temp$X * timeRes - 10
   replicate = rep(i, nrow(df_df_temp))
   channel = rep("df", nrow(df_df_temp))
   df_df_temp = cbind(df_df_temp, time, replicate, channel)
@@ -100,8 +107,7 @@ p = p + theme_bw(base_size=24)
 p 
 
 # Save plot
-setwd(paste(directory, "plots", sep=""))
-ggsave(p, file=paste(name, ".pdf", sep=""), width=9, height=6)
+ggsave(p, file=paste(output_dir, "/", name, ".pdf", sep=""), width=9, height=6)
 
 
 
