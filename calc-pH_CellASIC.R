@@ -17,8 +17,6 @@ library("tcltk2")
 library("gdata")
 
 
-
-
 # Set parameters --------------------------------------------------------------
 # Please adjust all of the following parameters
 
