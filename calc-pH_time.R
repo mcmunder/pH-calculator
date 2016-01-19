@@ -12,7 +12,7 @@ rm(list=ls()) # clean up
 
 library("ggplot2")
 library("plyr")
-library("hash")
+#library("hash")
 library("readr")
 library("tcltk")
 library("tcltk2")
@@ -43,13 +43,6 @@ calc_pH = function(emission_ratio, model){
                   (coefs[4] * emission_ratio^3) + 
                   (coefs[5] * emission_ratio^4)
   return(calculated_pH)
-}
-
-stats = function(df){
-  mean<- mean(df$pH)
-  sd <- sd(df$pH)
-  sem <- sd / sqrt(length(df))
-  data.frame(mean, sd, sem)
 }
 
 
@@ -88,12 +81,14 @@ for (i in 1:timepoints) {
   # apply(list$Mean, mean) on list_data_df etc...
   values_df = unlist(list_data_df)
   values_ff = unlist(list_data_ff)
-  ratios = values_df[c(grep("Mean", names(values_df)))] / 
-           values_ff[c(grep("Mean", names(values_ff)))]
+  intensities_df = values_df[c(grep("Mean", names(values_df)))]
+  intensities_ff = values_ff[c(grep("Mean", names(values_ff)))]
+  ratios = intensities_df / intensities_ff
   # calculate pH values;  mean and sd
   mean_pH = mean(calc_pH(ratios, best_fit))
   sd_pH = sd(calc_pH(ratios, best_fit))
-  df_pH_tmp = data.frame(timepoint=(i-1)*time_resolution, mean_pH=mean_pH, sd_pH=sd_pH)
+  df_pH_tmp = data.frame(timepoint=(i-1)*time_resolution, mean_df = mean(intensities_df),
+                         mean_ff = mean(intensities_ff), mean_pH=mean_pH, sd_pH=sd_pH)
   df_pH = rbind(df_pH, df_pH_tmp)
 }
 
@@ -104,14 +99,18 @@ p = ggplot(df_pH, aes(x=timepoint, y=mean_pH))
 p = p + geom_line(size=1, colour="red")
 p = p + geom_point(size=3)
 p = p + geom_errorbar(aes(ymin=mean_pH-sd_pH, ymax=mean_pH+sd_pH), size=1, width=4)
-p = p + scale_x_continuous(limits=c(-2, 95), breaks=seq(0, 95, 10))
-#p = p + scale_y_continuous(breaks=seq(6.6, 7.8, 0.1))
+p = p + scale_x_continuous(limits=c(-2, 125), breaks=seq(0, 125, 10))
+p = p + scale_y_continuous(breaks=seq(5.8, 7.8, 0.2))
 p = p + labs(title=name, x="time [min]", y="pH")
 p = p + theme_bw(base_size=24)
 p 
 
-# Save plot
-ggsave(p, file=paste(output_dir, "/", name, ".pdf", sep=""), width=6, height=5)
+# Save plot and dataframe
+setwd(output_dir)
+ggsave(p, file=paste(name, ".pdf", sep=""), width=6, height=5)
+write_tsv(df_pH, paste('df_pH_', name, '.txt', sep=''))
+write_csv(df_pH, paste('df_pH_', name, '.csv', sep=''))
+setwd(working_dir)
 
 
 
