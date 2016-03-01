@@ -1,5 +1,7 @@
 # README 
 
+[![Join the chat at https://gitter.im/mcmunder/pH-calculator](https://badges.gitter.im/mcmunder/pH-calculator.svg)](https://gitter.im/mcmunder/pH-calculator?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 This repository contains R scripts for the analysis of ratiometric, pHLuorin2 based pH measurements in yeast cells.
 
 ### Dependensies
