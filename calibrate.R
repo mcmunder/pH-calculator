@@ -10,10 +10,10 @@
 # library("readr")
 # input_dir_calibration = tk_choose.dir(caption=("Select input directory containing calibration data."))
 
-setwd(input_dir_calibration)
-
 
 # List of files in input directory
+
+setwd(input_dir_calibration)
 list_files = list.files(pattern = '.txt')
 list_dataframes = llply(list_files, read_tsv)
 
