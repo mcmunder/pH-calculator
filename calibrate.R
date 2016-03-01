@@ -1,7 +1,7 @@
 # This script generates a pH calibration curve 
 
-# The ollowing section is for testig the calibrate script seperately.
-# Comment out if calling as source() from calc-pH.R 
+# The following section is for testig the calibrate script seperately.
+# Comment out if calling as source() from calc-pH_time.R 
 
 # rm(list=ls()) # clean up
 # library("ggplot2")
